@@ -29,23 +29,19 @@ def cycle(iterable):
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
-train_loader = torch.utils.data.DataLoader(
-    torchvision.datasets.CIFAR10('data', train=True, download=True, transform=torchvision.transforms.Compose([
-        torchvision.transforms.ToTensor()
-    ])),
-    shuffle=True, batch_size=16, drop_last=True)
+dataset_train = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=torchvision.transforms.Compose([
+    torchvision.transforms.ToTensor()
+]))
+dataset_test = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=torchvision.transforms.Compose([
+    torchvision.transforms.ToTensor()
+]))
+dataset = torch.utils.data.ConcatDataset(dataset_train, dataset_test)
 
-test_loader = torch.utils.data.DataLoader(
-    torchvision.datasets.CIFAR10('data', train=False, download=True, transform=torchvision.transforms.Compose([
-        torchvision.transforms.ToTensor()
-    ])),
-    shuffle=False, batch_size=16, drop_last=True)
+train_loader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=16, drop_last=True)
 
 train_iterator = iter(cycle(train_loader))
-test_iterator = iter(cycle(test_loader))
 
-print(f'> Size of training dataset {len(train_loader.dataset)}')
-print(f'> Size of test dataset {len(test_loader.dataset)}')
+print(f'> Size of dataset (training + test): {len(train_loader.dataset)}')
 
 # endregion
 # region Define a simple model
