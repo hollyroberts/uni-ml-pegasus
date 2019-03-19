@@ -55,13 +55,13 @@ class MyNetwork(nn.Module):
     def __init__(self):
         super(MyNetwork, self).__init__()
         layers = nn.ModuleList()
-        layers.append(nn.Linear(in_features=3*32*32, out_features=512))
+        layers.append(nn.Linear(in_features=3 * 32 * 32, out_features=512))
         layers.append(nn.ReLU())
         layers.append(nn.Linear(in_features=512, out_features=32))
         layers.append(nn.ReLU())
         layers.append(nn.Linear(in_features=32, out_features=512))
         layers.append(nn.ReLU())
-        layers.append(nn.Linear(in_features=512, out_features=3*32*32))
+        layers.append(nn.Linear(in_features=512, out_features=3 * 32 * 32))
         layers.append(nn.Sigmoid())
         self.layers = layers
 
@@ -79,7 +79,7 @@ class MyNetwork(nn.Module):
 
     # decode (run second half of network then unflatten)
     def decode(self, x):
-        for i in range(4,8):
+        for i in range(4, 8):
             x = self.layers[i](x)
         x = x.view(x.size(0), 3, 32, 32)
         return x
@@ -110,9 +110,6 @@ while epoch < 10:
     # arrays for metrics
     logs = {}
     train_loss_arr = np.zeros(0)
-    train_acc_arr = np.zeros(0)
-    test_loss_arr = np.zeros(0)
-    test_acc_arr = np.zeros(0)
 
     # iterate over some of the train dateset
     for x, _ in train_loader:
@@ -120,7 +117,7 @@ while epoch < 10:
 
         optimiser.zero_grad()
         p = N(x)
-        loss = ((p-x)**2).mean()  # simple l2 loss
+        loss = ((p - x) ** 2).mean()  # simple l2 loss
         loss.backward()
         optimiser.step()
 
@@ -130,15 +127,8 @@ while epoch < 10:
     loop_duration = time.time() - loop_start_time
 
     print(f"Epoch {epoch + 1} finished ({format_time(loop_duration)}/{format_time(total_duration)})")
-    # print("\tAccuracy: " + format_acc(train_acc_arr.mean(), convert_to_percentage=True))
-    # print("\tVal Accuracy: " + format_acc(test_acc_arr.mean(), convert_to_percentage=True))
     print("\tLoss: " + format_acc(train_loss_arr.mean()))
-    # print("\tVal loss: " + format_acc(test_loss_arr.mean()))
-
-    # train_acc_graph.append(train_acc_arr.mean() * 100)
-    # test_acc_graph.append(test_acc_arr.mean() * 100)
     train_loss_graph.append(train_loss_arr.mean())
-    # test_loss_graph.append(test_loss_arr.mean())
 
     if train_loss_arr.mean() < best_loss:
         best_loss = train_loss_arr.mean()
@@ -164,9 +154,9 @@ bad_pegasus = N.decode(0.9 * example_1_code + 0.1 * example_2_code).squeeze(0)
 
 plt.grid(False)
 plt.imshow(bad_pegasus.cpu().data.permute(0, 2, 1).contiguous().permute(2, 1, 0), cmap=plt.cm.binary)
+plt.show()
 
-# region
+# endregion
 
-for i in range(len(test_loader.dataset.test_labels)):
- print(class_names[test_loader.dataset.test_labels[i]] + '\t idx: ' + str(i))
-
+# for i in range(len(test_loader.dataset.test_labels)):
+#  print(class_names[test_loader.dataset.test_labels[i]] + '\t idx: ' + str(i))
