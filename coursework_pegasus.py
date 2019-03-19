@@ -28,7 +28,10 @@ def cycle(iterable):
             yield x
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+class_horses = 7
+class_birds = 2
 
+# Get combined dataset
 dataset_train = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=torchvision.transforms.Compose([
     torchvision.transforms.ToTensor()
 ]))
@@ -37,11 +40,17 @@ dataset_test = torchvision.datasets.CIFAR10('data', train=False, download=True, 
 ]))
 dataset = torch.utils.data.ConcatDataset((dataset_train, dataset_test))
 
-train_loader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=16, drop_last=True)
+# Get dataset of horses/birds
+dataset_hb = []
+for i in dataset:
+    if i[1] == class_horses:
+        dataset_hb.append(i)
+
+train_loader = torch.utils.data.DataLoader(dataset_hb, shuffle=True, batch_size=16, drop_last=True)
 
 train_iterator = iter(cycle(train_loader))
 
-print(f'> Size of dataset (training + test): {len(train_loader.dataset)}')
+print(f'> Size of dataset (training + test): {len(train_loader.dataset):,}')
 
 # endregion
 # region Define a simple model
