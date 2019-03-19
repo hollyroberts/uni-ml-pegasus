@@ -41,6 +41,9 @@ dataset_test = torchvision.datasets.CIFAR10('data', train=False, download=True, 
 dataset = torch.utils.data.ConcatDataset((dataset_train, dataset_test))
 
 # Get dataset of horses/birds
+dataset_birds = list(x for x in dataset if x[1] == class_birds)
+dataset_horses = list(x for x in dataset if x[1] == class_horses)
+
 dataset_hb = []
 for i in dataset:
     if i[1] == class_horses:
@@ -148,17 +151,25 @@ print(f"Best train loss occurred in epoch {best_epoch + 1}: " + format_acc(best_
 # region Generate a pegasus
 """**Generate a Pegasus by interpolating between the latent space encodings of a horse and a bird**"""
 
-example_1 = test_loader.dataset[13][0].to(device)  # horse
-example_2 = test_loader.dataset[160][0].to(device)  # bird
+plt.figure(figsize=(10, 10))
+for i in range(25):
+    plt.subplot(5, 5, i+1)
+    plt.xticks([])
+    plt.yticks([])
 
-example_1_code = N.encode(example_1.unsqueeze(0))
-example_2_code = N.encode(example_2.unsqueeze(0))
+    horse = dataset_horses[0][0].to(device)  # horse
+    # example_2 = test_loader.dataset[160][0].to(device)  # bird
 
-# this is some sad blurry excuse of a Pegasus, hopefully you can make a better one
-bad_pegasus = N.decode(0.9 * example_1_code + 0.1 * example_2_code).squeeze(0)
+    horse_encoded = N.encode(horse.unsqueeze(0))
+    # example_2_code = N.encode(example_2.unsqueeze(0))
 
-plt.grid(False)
-plt.imshow(bad_pegasus.cpu().data.permute(0, 2, 1).contiguous().permute(2, 1, 0), cmap=plt.cm.binary)
+    # this is some sad blurry excuse of a Pegasus, hopefully you can make a better one
+    # bad_pegasus = N.decode(0.9 * example_1_code + 0.1 * example_2_code).squeeze(0)
+    bad_pegasus = N.decode(horse_encoded).squeeze(0)
+
+    plt.grid(False)
+    plt.imshow(bad_pegasus.cpu().data.permute(0, 2, 1).contiguous().permute(2, 1, 0), cmap=plt.cm.binary)
+
 plt.show()
 
 # endregion
