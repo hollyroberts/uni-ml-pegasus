@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torchvision
 import time
+import random
 import matplotlib.pyplot as plt
 from functions import *
 
@@ -94,7 +95,7 @@ class MyNetwork(nn.Module):
 
 N = MyNetwork().to(device)
 
-print(f'> Number of network parameters {len(torch.nn.utils.parameters_to_vector(N.parameters()))}')
+print(f'> Number of network parameters {len(torch.nn.utils.parameters_to_vector(N.parameters())):,}')
 
 # initialise the optimiser
 optimiser = torch.optim.Adam(N.parameters(), lr=0.001)
@@ -157,7 +158,7 @@ for i in range(25):
     plt.xticks([])
     plt.yticks([])
 
-    horse = dataset_horses[0][0].to(device)  # horse
+    horse = random.choice(dataset_horses)[0].to(device)  # horse
     # example_2 = test_loader.dataset[160][0].to(device)  # bird
 
     horse_encoded = N.encode(horse.unsqueeze(0))
@@ -165,7 +166,7 @@ for i in range(25):
 
     # this is some sad blurry excuse of a Pegasus, hopefully you can make a better one
     # bad_pegasus = N.decode(0.9 * example_1_code + 0.1 * example_2_code).squeeze(0)
-    bad_pegasus = N.decode(horse_encoded).squeeze(0)
+    bad_pegasus = N.decode(0.9 * horse_encoded).squeeze(0)
 
     plt.grid(False)
     plt.imshow(bad_pegasus.cpu().data.permute(0, 2, 1).contiguous().permute(2, 1, 0), cmap=plt.cm.binary)
