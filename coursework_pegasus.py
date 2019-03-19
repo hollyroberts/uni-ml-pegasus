@@ -35,7 +35,7 @@ dataset_train = torchvision.datasets.CIFAR10('data', train=True, download=True, 
 dataset_test = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=torchvision.transforms.Compose([
     torchvision.transforms.ToTensor()
 ]))
-dataset = torch.utils.data.ConcatDataset(dataset_train, dataset_test)
+dataset = torch.utils.data.ConcatDataset((dataset_train, dataset_test))
 
 train_loader = torch.utils.data.DataLoader(dataset, shuffle=True, batch_size=16, drop_last=True)
 
