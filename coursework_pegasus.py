@@ -77,6 +77,13 @@ class MyNetwork(nn.Module):
         self.lin2 = nn.Linear(in_features=400, out_features=30)
 
         # Decoder
+        self.lin3 = nn.Linear(in_features=30, out_features=400)
+        self.lin4 = nn.Linear(in_features=400, out_features=64 * 9 * 9)
+
+        self.deconv1 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1)
+        self.deconv2 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=5, stride=2)
+        self.deconv3 = nn.ConvTranspose2d(in_channels=64, out_channels=16, kernel_size=4, stride=1, dilation=2)
+        self.conv5 = nn.Conv2d(in_channels=16, out_channels=3, kernel_size=4, stride=1, padding=1)
 
     def forward(self, x):
         z = self.encode(x)
@@ -85,25 +92,40 @@ class MyNetwork(nn.Module):
 
     # encode (flatten as linear, then run first half of network)
     def encode(self, x):
-        # print(x.shape)
+        print(x.shape)
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
         x = F.relu(self.conv4(x))
-        # print(x.shape)
+        print(x.shape)
 
         x = x.view(x.size(0), -1)  # flatten input as we're using linear layers
-        # print(x.shape)
+        print(x.shape)
         x = F.relu(self.lin1(x))
         x = self.lin2(x)
+
+        print(x.shape)
+        print("Encoded")
 
         return x
 
     # decode (run second half of network then unflatten)
     def decode(self, x):
-        for i in range(4, 8):
-            x = self.layers[i](x)
-        x = x.view(x.size(0), 3, 32, 32)
+        print(x.shape)
+        x = F.relu(self.lin3(x))
+        x = F.relu(self.lin4(x))
+        print(x.shape)
+
+        x = x.view(x.size(0), 64, 9, 9)
+
+        print(x.shape)
+        x = F.relu(self.deconv1(x))
+        x = F.relu(self.deconv2(x))
+        x = F.relu(self.deconv3(x))
+        x = torch.sigmoid(self.conv5(x))
+        print(x.shape)
+        print("Decoded")
+
         return x
 
 N = MyNetwork().to(device)
@@ -139,6 +161,9 @@ while epoch < 10:
 
         optimiser.zero_grad()
         p = N(x)
+        print(p.shape)
+        print(x.shape)
+
         loss = ((p - x) ** 2).mean()  # simple l2 loss
         loss.backward()
         optimiser.step()
