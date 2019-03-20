@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torchvision
 import time
 import random
@@ -33,6 +34,7 @@ class_horses = 7
 class_birds = 2
 
 # Get combined dataset
+print("Loading dataset")
 dataset_train = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=torchvision.transforms.Compose([
     torchvision.transforms.ToTensor()
 ]))
@@ -42,6 +44,7 @@ dataset_test = torchvision.datasets.CIFAR10('data', train=False, download=True, 
 dataset = torch.utils.data.ConcatDataset((dataset_train, dataset_test))
 
 # Get dataset of horses/birds
+print("Converting dataset to just be horses/birds")
 dataset_birds = list(x for x in dataset if x[1] == class_birds)
 dataset_horses = list(x for x in dataset if x[1] == class_horses)
 
@@ -63,16 +66,17 @@ print(f'> Size of dataset (training + test): {len(train_loader.dataset):,}')
 class MyNetwork(nn.Module):
     def __init__(self):
         super(MyNetwork, self).__init__()
-        layers = nn.ModuleList()
-        layers.append(nn.Linear(in_features=3 * 32 * 32, out_features=512))
-        layers.append(nn.ReLU())
-        layers.append(nn.Linear(in_features=512, out_features=32))
-        layers.append(nn.ReLU())
-        layers.append(nn.Linear(in_features=32, out_features=512))
-        layers.append(nn.ReLU())
-        layers.append(nn.Linear(in_features=512, out_features=3 * 32 * 32))
-        layers.append(nn.Sigmoid())
-        self.layers = layers
+
+        # Encoder
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=4, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=4, stride=1, padding=0, dilation=2)
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5, stride=2)
+        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1)
+
+        self.lin1 = nn.Linear(in_features=64 * 9 * 9, out_features=400)
+        self.lin2 = nn.Linear(in_features=400, out_features=30)
+
+        # Decoder
 
     def forward(self, x):
         z = self.encode(x)
@@ -81,9 +85,18 @@ class MyNetwork(nn.Module):
 
     # encode (flatten as linear, then run first half of network)
     def encode(self, x):
-        x = x.view(x.size(0), -1)
-        for i in range(4):
-            x = self.layers[i](x)
+        # print(x.shape)
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = F.relu(self.conv4(x))
+        # print(x.shape)
+
+        x = x.view(x.size(0), -1)  # flatten input as we're using linear layers
+        # print(x.shape)
+        x = F.relu(self.lin1(x))
+        x = self.lin2(x)
+
         return x
 
     # decode (run second half of network then unflatten)
@@ -120,7 +133,7 @@ while epoch < 10:
     logs = {}
     train_loss_arr = np.zeros(0)
 
-    # iterate over some of the train dateset
+    # iterate over some of the train dataset
     for x, _ in train_loader:
         x = x.to(device)
 
