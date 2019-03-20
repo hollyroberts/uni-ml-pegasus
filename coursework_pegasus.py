@@ -88,7 +88,7 @@ class MyNetwork(nn.Module):
 
         self.deconv1 = nn.ConvTranspose2d(in_channels=16, out_channels=3, kernel_size=4, stride=1, padding=1)
         self.deconv2 = nn.ConvTranspose2d(in_channels=64, out_channels=16, kernel_size=4, stride=1)
-        self.deconv3 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=5, stride=2)
+        self.deconv3 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=5, stride=2, output_padding=1)
         self.deconv4 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1)
 
     def forward(self, x):
@@ -98,6 +98,7 @@ class MyNetwork(nn.Module):
 
     # encode (flatten as linear, then run first half of network)
     def encode(self, x):
+        # print(x.shape)
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
