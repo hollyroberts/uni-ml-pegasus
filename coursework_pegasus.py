@@ -33,7 +33,7 @@ def cycle(iterable):
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 class_horses = 7
-class_birds = 0
+class_birds = 0  # Actually an airplane!
 
 # Get combined dataset
 print("Loading dataset")
@@ -54,11 +54,14 @@ dataset_hb = []
 
 for i in dataset:
     if i[1] == class_birds:
-        dataset_hb.append(i)
+        # dataset_hb.append(i)
         dataset_birds.append(i)
     if i[1] == class_horses:
         dataset_hb.append(i)
         dataset_horses.append(i)
+
+print(f"Number of birds: {len(dataset_birds):,}")
+print(f"Number of horses: {len(dataset_horses):,}")
 
 train_loader = torch.utils.data.DataLoader(dataset_hb, shuffle=True, batch_size=16, drop_last=True)
 
@@ -128,7 +131,6 @@ class MyNetwork(nn.Module):
 
     # decode (run second half of network then unflatten)
     def decode(self, x):
-        # print(x.shape)
         x = F.relu(self.lin3(x))
         x = F.relu(self.lin4(x))
         # print(x.shape)
@@ -213,17 +215,17 @@ for i in range(25):
     plt.yticks([])
 
     horse = random.choice(dataset_horses)[0].to(device)  # horse
-    # example_2 = test_loader.dataset[160][0].to(device)  # bird
+    bird = random.choice(dataset_birds)[0].to(device)  # bird
 
     horse_encoded = N.encode(horse.unsqueeze(0))
-    # example_2_code = N.encode(example_2.unsqueeze(0))
+    bird_encoded = N.encode(bird.unsqueeze(0))
 
-    # this is some sad blurry excuse of a Pegasus, hopefully you can make a better one
-    # bad_pegasus = N.decode(0.9 * example_1_code + 0.1 * example_2_code).squeeze(0)
-    bad_pegasus = N.decode(0.9 * horse_encoded).squeeze(0)
+    # Create pegasus
+    # pegasus = N.decode(horse_encoded * (i + 1) / 25 + bird_encoded * (24 - i) / 25).squeeze(0)
+    pegasus = N.decode(horse_encoded).squeeze(0)
 
     plt.grid(False)
-    plt.imshow(bad_pegasus.cpu().data.permute(0, 2, 1).contiguous().permute(2, 1, 0), cmap=plt.cm.binary)
+    plt.imshow(pegasus.cpu().data.permute(0, 2, 1).contiguous().permute(2, 1, 0), cmap=plt.cm.binary)
 
 plt.show()
 
