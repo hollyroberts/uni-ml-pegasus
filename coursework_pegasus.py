@@ -33,7 +33,7 @@ def cycle(iterable):
 
 class_names = ['airplane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 class_horses = 7
-class_birds = 2
+class_birds = 0
 
 # Get combined dataset
 print("Loading dataset")
@@ -47,13 +47,18 @@ dataset = torch.utils.data.ConcatDataset((dataset_train, dataset_test))
 
 # Get dataset of horses/birds
 print("Converting dataset to just be horses/birds")
-dataset_birds = list(x for x in dataset if x[1] == class_birds)
-dataset_horses = list(x for x in dataset if x[1] == class_horses)
 
+dataset_birds = []
+dataset_horses = []
 dataset_hb = []
+
 for i in dataset:
+    if i[1] == class_birds:
+        dataset_hb.append(i)
+        dataset_birds.append(i)
     if i[1] == class_horses:
         dataset_hb.append(i)
+        dataset_horses.append(i)
 
 train_loader = torch.utils.data.DataLoader(dataset_hb, shuffle=True, batch_size=16, drop_last=True)
 
@@ -74,14 +79,14 @@ class MyNetwork(nn.Module):
         self.conv_size_prod = reduce(mul, self.conv_size)
 
         # Linear layer in/out size
-        initial_features = 400
+        initial_features = 200
         reduced_features = 30
 
         # Encoder
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=4, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=4, stride=1)
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5, stride=2, dilation=2)
-        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1)
+        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=4, stride=1)
 
         self.lin1 = nn.Linear(in_features=self.conv_size_prod, out_features=initial_features)
         self.lin2 = nn.Linear(in_features=initial_features, out_features=reduced_features)
