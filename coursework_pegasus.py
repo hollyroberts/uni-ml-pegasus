@@ -70,13 +70,13 @@ class MyNetwork(nn.Module):
         super(MyNetwork, self).__init__()
 
         # Tensor size of the convolution output
-        self.conv_size = [64, 10, 10]
+        self.conv_size = [64, 8, 8]
         self.conv_size_prod = reduce(mul, self.conv_size)
 
         # Encoder
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=4, stride=1, padding=1)
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=4, stride=1)
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5, stride=2)
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5, stride=2, dilation=2)
         self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1)
 
         self.lin1 = nn.Linear(in_features=self.conv_size_prod, out_features=400)
@@ -87,8 +87,8 @@ class MyNetwork(nn.Module):
         self.lin4 = nn.Linear(in_features=400, out_features=self.conv_size_prod)
 
         self.deconv1 = nn.ConvTranspose2d(in_channels=16, out_channels=3, kernel_size=4, stride=1, padding=1)
-        self.deconv2 = nn.ConvTranspose2d(in_channels=64, out_channels=16, kernel_size=4, stride=1)
-        self.deconv3 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=5, stride=2, output_padding=1)
+        self.deconv2 = nn.ConvTranspose2d(in_channels=64, out_channels=16, kernel_size=5, stride=1)
+        self.deconv3 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=5, stride=2, dilation=2)
         self.deconv4 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1)
 
     def forward(self, x):
@@ -100,7 +100,9 @@ class MyNetwork(nn.Module):
     def encode(self, x):
         # print(x.shape)
         x = F.relu(self.conv1(x))
+        # print(x.shape)
         x = F.relu(self.conv2(x))
+        # print(x.shape)
         x = F.relu(self.conv3(x))
         x = F.relu(self.conv4(x))
         # print(x.shape)
@@ -124,8 +126,11 @@ class MyNetwork(nn.Module):
 
         x = x.view(x.size(0), self.conv_size[0], self.conv_size[1], self.conv_size[2])
 
+        # print(x.shape)
         x = F.relu(self.deconv4(x))
+        # print(x.shape)
         x = F.relu(self.deconv3(x))
+        # print(x.shape)
         x = F.relu(self.deconv2(x))
         x = torch.sigmoid(self.deconv1(x))
         # print("Decoded")
