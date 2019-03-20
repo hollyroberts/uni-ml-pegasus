@@ -73,18 +73,22 @@ class MyNetwork(nn.Module):
         self.conv_size = [64, 8, 8]
         self.conv_size_prod = reduce(mul, self.conv_size)
 
+        # Linear layer in/out size
+        initial_features = 400
+        reduced_features = 30
+
         # Encoder
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=4, stride=1, padding=1)
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=4, stride=1)
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5, stride=2, dilation=2)
         self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1)
 
-        self.lin1 = nn.Linear(in_features=self.conv_size_prod, out_features=400)
-        self.lin2 = nn.Linear(in_features=400, out_features=30)
+        self.lin1 = nn.Linear(in_features=self.conv_size_prod, out_features=initial_features)
+        self.lin2 = nn.Linear(in_features=initial_features, out_features=reduced_features)
 
         # Decoder
-        self.lin3 = nn.Linear(in_features=30, out_features=400)
-        self.lin4 = nn.Linear(in_features=400, out_features=self.conv_size_prod)
+        self.lin3 = nn.Linear(in_features=reduced_features, out_features=initial_features)
+        self.lin4 = nn.Linear(in_features=initial_features, out_features=self.conv_size_prod)
 
         self.deconv1 = nn.ConvTranspose2d(in_channels=16, out_channels=3, kernel_size=4, stride=1, padding=1)
         self.deconv2 = nn.ConvTranspose2d(in_channels=64, out_channels=16, kernel_size=5, stride=1)
