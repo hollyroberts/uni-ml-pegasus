@@ -83,7 +83,7 @@ class MyNetwork(nn.Module):
 
         # Linear layer in/out size
         initial_features = 400
-        reduced_features = 15
+        reduced_features = 25
 
         # Encoder
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding=1)
@@ -227,9 +227,9 @@ print(f"Best train loss occurred in epoch {best_epoch + 1}: " + format_acc(best_
 # region Generate a pegasus
 """**Generate a Pegasus by interpolating between the latent space encodings of a horse and a bird**"""
 
-plt.figure(figsize=(10, 10))
-for i in range(25):
-    plt.subplot(5, 5, i+1)
+plt.figure(figsize=(10, 20))
+for i in range(50):
+    plt.subplot(10, 5, i+1)
     plt.xticks([])
     plt.yticks([])
 
@@ -240,7 +240,8 @@ for i in range(25):
     bird_encoded = N.encode(bird.unsqueeze(0))[0]
 
     # Create pegasus
-    pegasus = N.decode(horse_encoded * (i + 1) / 25 + bird_encoded * (24 - i) / 25).squeeze(0)
+    pegasus = N.decode(horse_encoded * 0.8 + bird_encoded * 0.4).squeeze(0)
+    # pegasus = N.decode(horse_encoded * (i + 1) / 25 + bird_encoded * (24 - i) / 25).squeeze(0)
     # pegasus = N.decode(horse_encoded).squeeze(0)
 
     plt.grid(False)
