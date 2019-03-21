@@ -78,7 +78,7 @@ class MyNetwork(nn.Module):
         super(MyNetwork, self).__init__()
 
         # Tensor size of the convolution output
-        self.conv_size = [64, 10, 10]
+        self.conv_size = [64, 3, 3]
         self.conv_size_prod = reduce(mul, self.conv_size)
 
         # Linear layer in/out size
@@ -86,10 +86,10 @@ class MyNetwork(nn.Module):
         reduced_features = 15
 
         # Encoder
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=16, out_channels=64, kernel_size=4, stride=1)
-        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5, stride=2)
-        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=4, stride=1)
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=4, stride=1)
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5, stride=1)
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5, stride=2, dilation=2)
+        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=4, stride=2)
 
         self.lin1 = nn.Linear(in_features=self.conv_size_prod, out_features=initial_features)
         self.lin2a = nn.Linear(in_features=initial_features, out_features=reduced_features)
@@ -99,10 +99,10 @@ class MyNetwork(nn.Module):
         self.lin3 = nn.Linear(in_features=reduced_features, out_features=initial_features)
         self.lin4 = nn.Linear(in_features=initial_features, out_features=self.conv_size_prod)
 
-        self.deconv1 = nn.ConvTranspose2d(in_channels=16, out_channels=3, kernel_size=4, stride=1, padding=1)
-        self.deconv2 = nn.ConvTranspose2d(in_channels=64, out_channels=16, kernel_size=5, stride=1)
-        self.deconv3 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=5, stride=2)
-        self.deconv4 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1)
+        self.deconv1 = nn.ConvTranspose2d(in_channels=32, out_channels=3, kernel_size=4, stride=1)
+        self.deconv2 = nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=5, stride=1)
+        self.deconv3 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=5, stride=2, dilation=2)
+        self.deconv4 = nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=4, stride=2, output_padding=1)
 
     def forward(self, x):
         mu, logvar = self.encode(x)
@@ -125,6 +125,7 @@ class MyNetwork(nn.Module):
         x = F.relu(self.conv2(x))
         # print(x.shape)
         x = F.relu(self.conv3(x))
+        # print(x.shape)
         x = F.relu(self.conv4(x))
         # print(x.shape)
 
@@ -133,6 +134,9 @@ class MyNetwork(nn.Module):
         x = F.relu(self.lin1(x))
         ret1 = self.lin2a(x)
         ret2 = self.lin2b(x)
+
+        # print(ret1.shape)
+        # print("Encoded")
 
         return ret1, ret2
 
@@ -150,7 +154,9 @@ class MyNetwork(nn.Module):
         x = F.relu(self.deconv3(x))
         # print(x.shape)
         x = F.relu(self.deconv2(x))
+        # print(x.shape)
         x = torch.sigmoid(self.deconv1(x))
+        # print(x.shape)
         # print("Decoded")
 
         return x
@@ -201,7 +207,7 @@ while epoch < 10:
         optimiser.zero_grad()
 
         p, mu, logvar = N(x)
-        loss = vae_loss(p, x, mu, logvar, epoch / 10)
+        loss = vae_loss(p, x, mu, logvar, 1)
         loss.backward()
         optimiser.step()
 
@@ -240,8 +246,9 @@ for i in range(25):
     bird_encoded = N.encode(bird.unsqueeze(0))[0]
 
     # Create pegasus
-    pegasus = N.decode(horse_encoded * (i + 1) / 25 + bird_encoded * (24 - i) / 25).squeeze(0)
-    # pegasus = N.decode(horse_encoded).squeeze(0)
+    # pegasus = N.decode(horse_encoded * 0.75 + bird_encoded * 0.25).squeeze(0)
+    # pegasus = N.decode(horse_encoded * (i + 1) / 25 + bird_encoded * (24 - i) / 25).squeeze(0)
+    pegasus = N.decode(horse_encoded).squeeze(0)
 
     plt.grid(False)
     plt.imshow(pegasus.cpu().data.permute(0, 2, 1).contiguous().permute(2, 1, 0), cmap=plt.cm.binary)
